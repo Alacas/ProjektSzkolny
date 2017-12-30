@@ -13,33 +13,20 @@
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0" Margin="2,2,10,0" VerticalAlignment="Top" Height="Auto" MinWidth="300">
             <TabControl>
+               
                 <TabItem Header="Test Items">
-                    <ListBox Name="lbTodoList" HorizontalContentAlignment="Stretch">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="100" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Title}" />
-                                    <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Completion}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </TabItem>
-                <TabItem Header="Testowe Items">
                     <ListBox Name="TestItemsList" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,2">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Image Source="{Binding Image.Source}" />
-                                    <TextBlock Text="{Binding Category}" />          
+                                    <Image Source="{Binding Image.Source}" Grid.Column="0"/>
+                                    <TextBlock Text="{Binding Category}" Grid.Column="1"/>
+                                    <TextBlock Text="{Binding Words}" Grid.Column="2"/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -47,15 +34,24 @@
                 </TabItem>
                 
                 <TabItem Header="Training Items">
-                    
-                        <ItemsControl ItemsSource="{Binding TrainingImagesToView}" Width="300" Height="200">
-                            <ItemsControl.ItemTemplate>                                
-                                <DataTemplate>  
-                                        <TextBox Text="test" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>                           
-                        </ItemsControl>
-                   
+
+                    <ListBox Name="TreiningItemsList" HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="{Binding Image.Source}" Grid.Column="0"/>
+                                    <TextBlock Text="{Binding Category}" Grid.Column="1"/>
+                                    <TextBlock Text="{Binding Words}" Grid.Column="2"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
                 </TabItem>
             </TabControl>
         </Grid>

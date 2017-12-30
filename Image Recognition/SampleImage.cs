@@ -9,13 +9,15 @@ namespace Image_Recognition
     public class SampleImage
     {
         public System.Windows.Controls.Image Image { get; set; }
-        public string Word { get; set; }
+        public string Words { get; set; }
         public string Category { get; set; }
-        public SampleImage(System.Windows.Controls.Image image, string word, string category)
+        public string ImageKey { get; set; }
+        public SampleImage(System.Windows.Controls.Image image, string words, string category, string imageKey)
         {
-            Word = word;
+            Words = words;
             Category = category;
             Image = image;
+            ImageKey = imageKey;
         }
     }
 }

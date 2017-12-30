@@ -10,6 +10,9 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Collections.ObjectModel;
+using Accord.Math;
+using Accord.MachineLearning.VectorMachines;
+using Accord.MachineLearning.VectorMachines.Learning;
 
 namespace Image_Recognition
 {
@@ -21,12 +24,12 @@ namespace Image_Recognition
     public partial class MainWindow : Window
     {
 
-        Dictionary<string, Bitmap> originalTrainImages;
+        Dictionary<string, Bitmap> originalTraingImages;
         Dictionary<string, Bitmap> originalTestImages;
-        public List<String> TetowaLista { get; set; }
         
 
         public List<SampleImage> TrainingImagesToView { get; set; }
+        public List<SampleImage> TestImagesToView { get; set; }
 
         Dictionary<string, Bitmap> originalImages;
         Dictionary<string, Bitmap> displayImages;
@@ -39,24 +42,48 @@ namespace Image_Recognition
         private void StartWordMatching_Click(object sender, RoutedEventArgs e)
         {
           
-            BinarySplit binarySplit = new BinarySplit(30);
+            BinarySplit binarySplit = new BinarySplit(36);
             BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
-            bow = surfBow.Learn(originalTrainImages.Values.ToArray());
+            var test22 = originalTraingImages.Values.ToArray();
+            bow = surfBow.Learn(test22);
+
+            foreach (var item in TrainingImagesToView)
+            {
+                // Get item image
+                Bitmap image = originalTraingImages[item.ImageKey] as Bitmap;
+
+                // Get a feature vector representing this image
+                double[] featureVector = (bow as ITransform<Bitmap, double[]>).Transform(image);
+
+                // Represent it as a string so we can show it onscreen
+                string featureString = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
+
+                //// Show it in the visual grid
+                //if (item.SubItems.Count == 2)
+                //    item.SubItems[1].Text = featureString;
+                //else item.SubItems.Add(featureString);
+
+                //// Retrieve the class labels, that we had stored in the Tag
+                //int classLabel = (item.Tag as Tuple<double[], int>).Item2;
+
+                //// Now, use the Tag to store the feature vector too
+                //item.Tag = Tuple.Create(featureVector, classLabel);
+            }
         }
         
         //TODO zrobić to przez event onloaded
         private void OnLoad()
         {
-            TetowaLista = new List<String>();
             var path = new DirectoryInfo(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Resources"));
 
             // Create image list to load images into
             originalImages = new Dictionary<string, Bitmap>();
             displayImages = new Dictionary<string, Bitmap>();
             TrainingImagesToView = new List<SampleImage>();
+            TestImagesToView = new List<SampleImage>();
 
             originalTestImages = new Dictionary<string, Bitmap>();
-            originalTrainImages = new Dictionary<string, Bitmap>();
+            originalTraingImages = new Dictionary<string, Bitmap>();
 
             //tu ma być wyświetlane
             //ImageList imageList = new ImageList();
@@ -93,7 +120,7 @@ namespace Image_Recognition
                     string imageKey = file.FullName;
 
                     //imageList.Images.Add(imageKey, image);
-                    originalImages.Add(imageKey, image);
+                    originalImages.Add(imageKey, image); //po co to??
                     displayImages.Add(imageKey, image);
                     //TODO robiz testowe i treningowe dane
                     //ListViewItem item;
@@ -101,7 +128,7 @@ namespace Image_Recognition
                     {
                         // Put the first 70% in training set
                         //item = new ListViewItem(trainingGroup);
-                        originalTrainImages.Add(imageKey, image);
+                        originalTraingImages.Add(imageKey, image);
                        
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
                         obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
@@ -110,16 +137,24 @@ namespace Image_Recognition
                               System.Windows.Int32Rect.Empty,
                               BitmapSizeOptions.FromWidthAndHeight(50, 50));
                         //TrainingItemsList.Items.Add(obrazek);
-                        TrainingImagesToView.Add(new SampleImage(obrazek, "", name));
-                       
-                        TetowaLista.Add(name);
+                        TrainingImagesToView.Add(new SampleImage(obrazek, "", name, imageKey));                      
+
 
                     }
                     else
                     {
                         // Put the restant 30% in test set
                         //item = new ListViewItem(testingGroup);
+                        //TODO jesli to mozliwe wywalic imagekey
                         originalTestImages.Add(imageKey, image);
+                        System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
+                        obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                              image.GetHbitmap(),
+                              IntPtr.Zero,
+                              System.Windows.Int32Rect.Empty,
+                              BitmapSizeOptions.FromWidthAndHeight(50, 50));
+                        //TrainingItemsList.Items.Add(obrazek);
+                        TestImagesToView.Add(new SampleImage(obrazek, "", "", imageKey));
                     }
 
                     //item.ImageKey = imageKey;
@@ -146,24 +181,18 @@ namespace Image_Recognition
             IEnumerable<FileInfo> files = dir.EnumerateFiles();
             return files.Where(f => extensions.Contains(f.Extension));
         }
-        List<TodoItem> items = new List<TodoItem>();
+ 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             OnLoad();
             
-            items.Add(new TodoItem() { Title = "Complete this WPF tutorial", Completion = 45 });
-            items.Add(new TodoItem() { Title = "Learn C#", Completion = 80 });
-            items.Add(new TodoItem() { Title = "Wash the car", Completion = 0 });
 
-            lbTodoList.ItemsSource = items;
-            TestItemsList.ItemsSource = TrainingImagesToView;
+            
+            TreiningItemsList.ItemsSource = TrainingImagesToView;
+            TestItemsList.ItemsSource = TestImagesToView;
 
 
         }
-        public class TodoItem
-        {
-            public string Title { get; set; }
-            public int Completion { get; set; }
-        }
+       
     }
 }
