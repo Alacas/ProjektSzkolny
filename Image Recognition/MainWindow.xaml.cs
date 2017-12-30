@@ -56,7 +56,7 @@ namespace Image_Recognition
                 double[] featureVector = (bow as ITransform<Bitmap, double[]>).Transform(image);
 
                 // Represent it as a string so we can show it onscreen
-                string featureString = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
+                item.Words = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
 
                 //// Show it in the visual grid
                 //if (item.SubItems.Count == 2)
