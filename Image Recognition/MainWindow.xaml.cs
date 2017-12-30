@@ -13,9 +13,7 @@ using System.Collections.ObjectModel;
 
 namespace Image_Recognition
 {
-    /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
-    /// </summary>
+
     //TODO zmienic nazwę okna
     //TODO sprawdzić czy da się łatwo zrobić zakładki
     //TODO wyswietlanie w jednym oknie danych treningowych wraz ze slowami, a w drugim oknie testowych z rpzypisanymi klasami
