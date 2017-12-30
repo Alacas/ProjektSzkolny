@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using Accord.Math;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
+using Accord.Statistics.Kernels;
 
 namespace Image_Recognition
 {
@@ -23,7 +24,7 @@ namespace Image_Recognition
 
     public partial class MainWindow : Window
     {
-
+        MulticlassSupportVectorMachine<IKernel> ksvm;
         Dictionary<string, Bitmap> originalTraingImages;
         Dictionary<string, Bitmap> originalTestImages;
         
@@ -41,12 +42,13 @@ namespace Image_Recognition
 
         private void StartWordMatching_Click(object sender, RoutedEventArgs e)
         {
-          
+            StatusLabel.Content = "Procesing...";
+           //TODO Application.DoEvents();
             BinarySplit binarySplit = new BinarySplit(36);
             BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
             var test22 = originalTraingImages.Values.ToArray();
             bow = surfBow.Learn(test22);
-
+            
             foreach (var item in TrainingImagesToView)
             {
                 // Get item image
@@ -58,17 +60,20 @@ namespace Image_Recognition
                 // Represent it as a string so we can show it onscreen
                 item.Words = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
 
-                //// Show it in the visual grid
-                //if (item.SubItems.Count == 2)
-                //    item.SubItems[1].Text = featureString;
-                //else item.SubItems.Add(featureString);
-
-                //// Retrieve the class labels, that we had stored in the Tag
-                //int classLabel = (item.Tag as Tuple<double[], int>).Item2;
-
-                //// Now, use the Tag to store the feature vector too
-                //item.Tag = Tuple.Create(featureVector, classLabel);
             }
+            foreach (var item in TestImagesToView)
+            {
+                // Get item image
+                Bitmap image = originalTestImages[item.ImageKey] as Bitmap;
+
+                // Get a feature vector representing this image
+                double[] featureVector = (bow as ITransform<Bitmap, double[]>).Transform(image);
+
+                // Represent it as a string so we can show it onscreen
+                item.Words = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
+
+            }
+            StatusLabel.Content = "Done!";
         }
         
         //TODO zrobić to przez event onloaded
@@ -185,7 +190,7 @@ namespace Image_Recognition
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             OnLoad();
-            
+            StatusLabel.Content = "Select number of words and press Start Word Matching button";
 
             
             TreiningItemsList.ItemsSource = TrainingImagesToView;
@@ -193,6 +198,103 @@ namespace Image_Recognition
 
 
         }
-       
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            // Get the chosen kernel 
+            IKernel kernel = new Gaussian(6.200);
+
+            // Extract training parameters from the interface
+            //TODO pobrac to z UI
+            double complexity = 1;
+            double tolerance = 0.01;
+            int cacheSize = 500;
+            SelectionStrategy strategy = SelectionStrategy.Sequential;
+
+            // Create the support vector machine learning algorithm
+            var teacher = new MulticlassSupportVectorLearning<IKernel>()
+            {
+                Kernel = kernel,
+                Learner = (param) =>
+                {
+                    return new SequentialMinimalOptimization<IKernel>()
+                    {
+                        Kernel = kernel,
+                        Complexity = complexity,
+                        Tolerance = tolerance,
+                        CacheSize = cacheSize,
+                        Strategy = strategy,
+                    };
+                }
+            };
+
+            // Get the input and output data
+            double[][] inputs;
+            int[] outputs;
+            getData(out inputs, out outputs);
+
+            // Prepare to start learning
+            //lbStatus.Text = "Training the classifiers. This may take a (very) significant amount of time...";
+            //Application.DoEvents();
+
+ 
+
+            // Train the machines. It should take a while.
+            this.ksvm = teacher.Learn(inputs, outputs);
+
+            //sw.Stop();
+
+            // Compute the training error (accuracy, also known as zero-one-loss)
+            //double error = new ZeroOneLoss(outputs).Loss(ksvm.Decide(inputs));
+
+            //lbStatus.Text = String.Format(
+            //    "Training complete ({0}ms, {1}er). Click Classify to test the classifiers.",
+            //    sw.ElapsedMilliseconds, error);
+
+            //btnClassifyElimination.Enabled = true;
+
+            //// Populate the information tab with the machines
+            //dgvMachines.Rows.Clear();
+            //for (int i = 0, k = 1; i < ksvm.NumberOfOutputs; i++)
+            //{
+            //    for (int j = 0; j < i; j++, k++)
+            //    {
+            //        SupportVectorMachine<IKernel> machine = ksvm[i, j];
+
+            //        int numberOfSupportVectors = machine.SupportVectors == null ?
+            //            0 : machine.SupportVectors.Length;
+
+            //        int rowIndex = dgvMachines.Rows.Add(k, i + "-vs-" + j, numberOfSupportVectors, machine.Threshold);
+            //        dgvMachines.Rows[rowIndex].Tag = machine;
+            //    }
+            //}
+
+            //// approximate size in bytes = 
+            ////   number of support vectors * number of doubles in a support vector * size of double
+            //int bytes = ksvm.SupportVectorUniqueCount * ksvm.NumberOfInputs * sizeof(double);
+            //double megabytes = bytes / (1024.0 * 1024.0);
+            //lbSize.Text = String.Format("{0} ({1} MB)", ksvm.SupportVectorUniqueCount, megabytes);
+        }
+        private void getData(out double[][] inputs, out int[] outputs)
+        {
+            List<double[]> inputList = new List<double[]>();
+            List<int> outputList = new List<int>();
+
+
+            //przechowywać vector jako string i jako double[], przechowywac jakos tablice typow
+          
+                    foreach (var item in TrainingImagesToView)
+                    {
+                        // Recover the class label and the feature vector
+                        // that had been stored in the rows' Tag objects
+                        //var info = item.Words as Tuple<double[], int>;
+                        inputList.Add(info.Item1);
+                        outputList.Add(info.Item2);
+                    }
+      
+
+            inputs = inputList.ToArray();
+            outputs = outputList.ToArray();
+        }
     }
 }

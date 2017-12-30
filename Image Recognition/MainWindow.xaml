@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0" Margin="2,2,10,0" VerticalAlignment="Top" Height="Auto" MinWidth="300">
             <TabControl>
-               
+
                 <TabItem Header="Test Items">
                     <ListBox Name="TestItemsList" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
@@ -32,7 +32,7 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </TabItem>
-                
+
                 <TabItem Header="Training Items">
 
                     <ListBox Name="TreiningItemsList" HorizontalContentAlignment="Stretch">
@@ -57,8 +57,12 @@
         </Grid>
 
         <Grid Grid.Column="1" HorizontalAlignment="Left" Height="484" Margin="1,10,0,0" VerticalAlignment="Top" Width="226">
-            <Button x:Name="StartWordMatching" Content="Start Word Matching" HorizontalAlignment="Left" Click="StartWordMatching_Click" Height="20"/>
-            <Image x:Name="testImage" HorizontalAlignment="Left" Height="100" Margin="41,63,0,0" VerticalAlignment="Top" Width="100"/>
+            <Label Name="StatusLabel" Height="30" Margin="5,10,10,444"/>
+            <TextBox Name="WordsNumber" Text="36" Width="50" Height="20" Margin="148,45,28,419"/>
+            <Button x:Name="StartWordMatching" Content="Start Word Matching" HorizontalAlignment="Left" Click="StartWordMatching_Click" Height="20" Margin="54,75,0,389"/>
+            <Label Height="30" Margin="37,41,83,413">Number of words:</Label>
+            <Button Content="Start Treaining" HorizontalAlignment="Left" Margin="54,100,0,0" VerticalAlignment="Top" Width="114" Click="Button_Click"/>
+
         </Grid>
 
     </Grid>
