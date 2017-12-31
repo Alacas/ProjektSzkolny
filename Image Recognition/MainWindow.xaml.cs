@@ -30,7 +30,7 @@ namespace Image_Recognition
 
 
         public List<SampleImage> TrainingImagesToView { get; set; }
-        public List<SampleImage> TestImagesToView { get; set; }
+        public ObservableCollection<SampleImage> TestImagesToView { get; set; }
 
 
         //TODO wywalic
@@ -47,7 +47,7 @@ namespace Image_Recognition
         {
             OutpusConsole.Text = "Procesing...";
             //TODO Application.DoEvents();
-            BinarySplit binarySplit = new BinarySplit(36);
+            BinarySplit binarySplit = new BinarySplit(Int32.Parse(WordsNumber.Text));
             BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
             var test22 = originalTraingImages.Values.ToArray();
             bow = surfBow.Learn(test22);
@@ -76,7 +76,9 @@ namespace Image_Recognition
 
 
             }
-            OutpusConsole.Text = "Done!";
+            OutpusConsole.Text = "Done! \nNow select method of learning and press Start Traning button.";
+            TestItemsList.Items.Refresh();
+            TraningItemsList.Items.Refresh();
         }
 
         //TODO zrobić to przez event onloaded
@@ -88,7 +90,7 @@ namespace Image_Recognition
             originalImages = new Dictionary<string, Bitmap>();
             displayImages = new Dictionary<string, Bitmap>();
             TrainingImagesToView = new List<SampleImage>();
-            TestImagesToView = new List<SampleImage>();
+            TestImagesToView = new ObservableCollection<SampleImage>();
 
             originalTestImages = new Dictionary<string, Bitmap>();
             originalTraingImages = new Dictionary<string, Bitmap>();
@@ -178,7 +180,8 @@ namespace Image_Recognition
 
                 currentClassLabel++;
             }
-            var test = 1;
+
+
 
 
 
@@ -197,7 +200,7 @@ namespace Image_Recognition
             OutpusConsole.Text = "Select number of words and press Start Word Matching button";
 
 
-            TreiningItemsList.ItemsSource = TrainingImagesToView;
+            TraningItemsList.ItemsSource = TrainingImagesToView;
             TestItemsList.ItemsSource = TestImagesToView;
 
 
@@ -310,14 +313,14 @@ namespace Image_Recognition
             {
                 int actual = ksvm.Decide(item.Vector);
                 item.Category = Categories.FirstOrDefault(x => x.Value == actual).Key;
-                if(item.Category != item.ExptectedCategory)
+                if (item.Category != item.ExptectedCategory)
                 {
                     errors++;
 
                 }
             }
-            double percentOfErrors =(double)((TestImagesToView.Count - errors) / TestImagesToView.Count);
-            OutpusConsole.Text = "Efficiency: " + percentOfErrors + ".";
+            int percentOfErrors = ((TestImagesToView.Count - errors) * 100 / TestImagesToView.Count);
+            OutpusConsole.Text = "Efficiency: " + percentOfErrors + "%.";
 
         }
     }

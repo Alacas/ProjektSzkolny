@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Image_Recognition"
+        
         mc:Ignorable="d"
-        Title="MainWindow" MinHeight="350" MinWidth="525" Loaded="Window_Loaded">
+        Title="Image Recognition - Daniel Sacala i Lukasz Ostrowski" MinHeight="450" MinWidth="525" Loaded="Window_Loaded" d:DesignHeight="807.75" >
     <Grid Margin="2,2,2,2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -35,7 +36,7 @@
 
                 <TabItem Header="Training Items">
 
-                    <ListBox Name="TreiningItemsList" HorizontalContentAlignment="Stretch">
+                    <ListBox Name="TraningItemsList" HorizontalContentAlignment="Stretch">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Grid Margin="0,2">
@@ -56,15 +57,47 @@
             </TabControl>
         </Grid>
 
-        <Grid Grid.Column="1" HorizontalAlignment="Left" Height="484" Margin="1,10,0,0" VerticalAlignment="Top" Width="226">
-            <TextBlock TextWrapping="WrapWithOverflow" Name="OutpusConsole" Margin="10,320,5,10"/>
-            <TextBox Name="WordsNumber" Text="36" Width="50" Height="20" Margin="142,10,34,454"/>
-            <Button x:Name="StartWordMatching" Content="Start Word Matching" HorizontalAlignment="Left" Click="StartWordMatching_Click" Height="20" Margin="52,38,0,426"/>
-            <Label Height="30" Margin="31,6,89,448">Number of words:</Label>
-            <Button Content="Start Training" HorizontalAlignment="Left" Margin="52,63,0,0" VerticalAlignment="Top" Width="114" Click="StartTraning_Click"/>
-            <Button Content="Start Classifying" HorizontalAlignment="Left" Margin="52,88,0,0" VerticalAlignment="Top" Width="114" Click="Button_Click"/>
-            <Label Content="Ouput console:" HorizontalAlignment="Left" Margin="10,289,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.053,2.115" Width="156"/>
+        <Grid Grid.Column="1" HorizontalAlignment="Left" Height="662" Margin="1,10,0,0" VerticalAlignment="Top" Width="226">
+            <GroupBox Header="Feature Extraction" HorizontalAlignment="Left" Height="159" Margin="10,10,0,0" VerticalAlignment="Top" Width="206">
+                <Grid>
+                   
+                    <TextBox Name="WordsNumber" Text="36" Width="50" Height="20" Margin="134,14,10,103"/>
+                    <Button x:Name="StartWordMatching" Content="Start Word Matching" HorizontalAlignment="Left" Click="StartWordMatching_Click" Height="20" Margin="40,107,0,10"/>
+                    <Label Height="30" Margin="10,10,77,97" RenderTransformOrigin="0.505,0">Number of words:</Label>
+                    <Label Height="30" Margin="10,41,127,66" Content="Detector:"/>
+                    <RadioButton Content="SURF" HorizontalAlignment="Left" Margin="134,47,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.439,-0.8"/>
+                    <RadioButton Content="FREAG" HorizontalAlignment="Left" Margin="134,67,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.439,-0.8"/>
+                    <RadioButton Content="HOG" HorizontalAlignment="Left" Margin="134,87,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.439,-0.8"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Classifier Settings" HorizontalAlignment="Left" Height="328" Margin="10,169,0,0" VerticalAlignment="Top" Width="206">
+                <Grid>
 
+                    <Button Content="Start Training" HorizontalAlignment="Left" Margin="34,254,0,0" VerticalAlignment="Top" Width="114" Click="StartTraning_Click"/>
+                    <Button Content="Start Classifying" HorizontalAlignment="Left" Margin="34,279,0,0" VerticalAlignment="Top" Width="114" Click="Button_Click"/>
+
+                    <RadioButton Name="GaussianRadio"  Content="Gaussian Kernel" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.359,0.8" Grid.ColumnSpan="2"/>
+                    <RadioButton Name="PolynomiaRadio" Content="Polynomial Kernel" HorizontalAlignment="Left" Margin="10,57,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.518,1.733" Grid.ColumnSpan="2"/>
+                    <RadioButton Name="ChiRadio" Content="Chi-Square Kerlnel" HorizontalAlignment="Left" Margin="10,108,0,0" VerticalAlignment="Top" IsChecked="True" Grid.ColumnSpan="2"/>
+                    <RadioButton Name="HistogramRadio" Content="Histogram Intersection Kernel" HorizontalAlignment="Left" Margin="10,128,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                    <Label Content="Sigma:" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top"/>
+                    <TextBox Name="GoussianSigma" HorizontalAlignment="Left" Height="23" Margin="113,29,0,0" TextWrapping="Wrap" Text="6.2" VerticalAlignment="Top" Width="73" RenderTransformOrigin="-0.592,-0.522"/>
+                    <Label Content="Degree:" HorizontalAlignment="Left" Margin="10,77,0,0" VerticalAlignment="Top"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="61,81,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="31"/>
+                    <Label Content="Contant:" HorizontalAlignment="Left" Margin="93,77,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+                    <TextBox HorizontalAlignment="Left" Height="23" Margin="150,81,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="36" RenderTransformOrigin="3.167,0.826"/>
+                    <Label Content="Complexity:" HorizontalAlignment="Left" Margin="10,143,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Tolerance:" HorizontalAlignment="Left" Margin="10,169,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Cache Size:" HorizontalAlignment="Left" Margin="10,195,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Strategy:" HorizontalAlignment="Left" Margin="10,221,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="ComplexityTextBox" HorizontalAlignment="Left" Height="23" Margin="113,147,0,0" TextWrapping="Wrap" Text="1.0" VerticalAlignment="Top" Width="73" RenderTransformOrigin="-0.592,-0.522"/>
+                    <TextBox x:Name="ToleranceTextBox" HorizontalAlignment="Left" Height="23" Margin="113,173,0,0" TextWrapping="Wrap" Text="0.01" VerticalAlignment="Top" Width="73" RenderTransformOrigin="-0.592,-0.522"/>
+                    <TextBox x:Name="CacheSizeTextBox" HorizontalAlignment="Left" Height="23" Margin="113,199,0,0" TextWrapping="Wrap" Text="500" VerticalAlignment="Top" Width="73" RenderTransformOrigin="-0.592,-0.522"/>
+                    <ComboBox HorizontalAlignment="Left" Margin="71,227,0,0" VerticalAlignment="Top" Width="115"/>
+                </Grid>
+            </GroupBox>
+            <Label Content="Ouput console:" HorizontalAlignment="Left" Margin="10,502,0,0" VerticalAlignment="Top" RenderTransformOrigin="-1.053,2.115" Width="156"/>
+            <TextBlock TextWrapping="WrapWithOverflow" Name="OutpusConsole" Margin="10,533,5,0" Height="119" VerticalAlignment="Top"/>
         </Grid>
 
     </Grid>
