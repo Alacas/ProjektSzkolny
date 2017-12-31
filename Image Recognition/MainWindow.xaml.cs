@@ -27,13 +27,16 @@ namespace Image_Recognition
         MulticlassSupportVectorMachine<IKernel> ksvm;
         Dictionary<string, Bitmap> originalTraingImages;
         Dictionary<string, Bitmap> originalTestImages;
-        
+
 
         public List<SampleImage> TrainingImagesToView { get; set; }
         public List<SampleImage> TestImagesToView { get; set; }
 
+
+        //TODO wywalic
         Dictionary<string, Bitmap> originalImages;
         Dictionary<string, Bitmap> displayImages;
+        Dictionary<string, int> Categories = new Dictionary<string, int>();
         public MainWindow()
         {
             InitializeComponent();
@@ -42,23 +45,23 @@ namespace Image_Recognition
 
         private void StartWordMatching_Click(object sender, RoutedEventArgs e)
         {
-            StatusLabel.Content = "Procesing...";
-           //TODO Application.DoEvents();
+            OutpusConsole.Text = "Procesing...";
+            //TODO Application.DoEvents();
             BinarySplit binarySplit = new BinarySplit(36);
             BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
             var test22 = originalTraingImages.Values.ToArray();
             bow = surfBow.Learn(test22);
-            
+
             foreach (var item in TrainingImagesToView)
             {
                 // Get item image
                 Bitmap image = originalTraingImages[item.ImageKey] as Bitmap;
 
                 // Get a feature vector representing this image
-                double[] featureVector = (bow as ITransform<Bitmap, double[]>).Transform(image);
+                item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
 
-                // Represent it as a string so we can show it onscreen
-                item.Words = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
+
+
 
             }
             foreach (var item in TestImagesToView)
@@ -67,15 +70,15 @@ namespace Image_Recognition
                 Bitmap image = originalTestImages[item.ImageKey] as Bitmap;
 
                 // Get a feature vector representing this image
-                double[] featureVector = (bow as ITransform<Bitmap, double[]>).Transform(image);
+                item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
 
-                // Represent it as a string so we can show it onscreen
-                item.Words = featureVector.ToString(DefaultArrayFormatProvider.InvariantCulture);
+
+
 
             }
-            StatusLabel.Content = "Done!";
+            OutpusConsole.Text = "Done!";
         }
-        
+
         //TODO zrobić to przez event onloaded
         private void OnLoad()
         {
@@ -102,6 +105,7 @@ namespace Image_Recognition
             foreach (DirectoryInfo classFolder in path.EnumerateDirectories())
             {
                 string name = classFolder.Name;
+                Categories.Add(name, currentClassLabel);
 
                 // Create two list view groups for each class.  Use 70%
                 // of training instances and the remaining 30% as testing.
@@ -121,7 +125,7 @@ namespace Image_Recognition
 
                     Bitmap image = (Bitmap)Bitmap.FromFile(file.FullName);
 
-                    string shortName = file.Name;
+
                     string imageKey = file.FullName;
 
                     //imageList.Images.Add(imageKey, image);
@@ -134,15 +138,15 @@ namespace Image_Recognition
                         // Put the first 70% in training set
                         //item = new ListViewItem(trainingGroup);
                         originalTraingImages.Add(imageKey, image);
-                       
+
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
                         obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                               image.GetHbitmap(),
                               IntPtr.Zero,
                               System.Windows.Int32Rect.Empty,
-                              BitmapSizeOptions.FromWidthAndHeight(50, 50));
+                              BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
                         //TrainingItemsList.Items.Add(obrazek);
-                        TrainingImagesToView.Add(new SampleImage(obrazek, "", name, imageKey));                      
+                        TrainingImagesToView.Add(new SampleImage(obrazek, name, imageKey));
 
 
                     }
@@ -157,9 +161,9 @@ namespace Image_Recognition
                               image.GetHbitmap(),
                               IntPtr.Zero,
                               System.Windows.Int32Rect.Empty,
-                              BitmapSizeOptions.FromWidthAndHeight(50, 50));
+                              BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
                         //TrainingItemsList.Items.Add(obrazek);
-                        TestImagesToView.Add(new SampleImage(obrazek, "", "", imageKey));
+                        TestImagesToView.Add(new SampleImage(obrazek, "", imageKey, name));
                     }
 
                     //item.ImageKey = imageKey;
@@ -175,7 +179,7 @@ namespace Image_Recognition
                 currentClassLabel++;
             }
             var test = 1;
-            
+
 
 
         }
@@ -186,23 +190,23 @@ namespace Image_Recognition
             IEnumerable<FileInfo> files = dir.EnumerateFiles();
             return files.Where(f => extensions.Contains(f.Extension));
         }
- 
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             OnLoad();
-            StatusLabel.Content = "Select number of words and press Start Word Matching button";
+            OutpusConsole.Text = "Select number of words and press Start Word Matching button";
 
-            
+
             TreiningItemsList.ItemsSource = TrainingImagesToView;
             TestItemsList.ItemsSource = TestImagesToView;
 
 
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void StartTraning_Click(object sender, RoutedEventArgs e)
         {
             // Get the chosen kernel 
-            IKernel kernel = new Gaussian(6.200);
+            IKernel kernel = new ChiSquare(); //new Gaussian(6.2);
 
             // Extract training parameters from the interface
             //TODO pobrac to z UI
@@ -231,13 +235,13 @@ namespace Image_Recognition
             // Get the input and output data
             double[][] inputs;
             int[] outputs;
-            getData(out inputs, out outputs);
+            GetData(out inputs, out outputs);
 
             // Prepare to start learning
             //lbStatus.Text = "Training the classifiers. This may take a (very) significant amount of time...";
             //Application.DoEvents();
 
- 
+
 
             // Train the machines. It should take a while.
             this.ksvm = teacher.Learn(inputs, outputs);
@@ -275,26 +279,46 @@ namespace Image_Recognition
             //double megabytes = bytes / (1024.0 * 1024.0);
             //lbSize.Text = String.Format("{0} ({1} MB)", ksvm.SupportVectorUniqueCount, megabytes);
         }
-        private void getData(out double[][] inputs, out int[] outputs)
+        private void GetData(out double[][] inputs, out int[] outputs)
         {
             List<double[]> inputList = new List<double[]>();
             List<int> outputList = new List<int>();
 
 
             //przechowywać vector jako string i jako double[], przechowywac jakos tablice typow
-          
-                    foreach (var item in TrainingImagesToView)
-                    {
-                        // Recover the class label and the feature vector
-                        // that had been stored in the rows' Tag objects
-                        //var info = item.Words as Tuple<double[], int>;
-                        inputList.Add(info.Item1);
-                        outputList.Add(info.Item2);
-                    }
-      
+
+            foreach (var item in TrainingImagesToView)
+            {
+                // Recover the class label and the feature vector
+                // that had been stored in the rows' Tag objects
+                //var info = item.Words as Tuple<double[], int>;
+                inputList.Add(item.Vector);
+                int categoryName;
+                Categories.TryGetValue(item.Category, out categoryName);
+                outputList.Add(categoryName);
+            }
+
 
             inputs = inputList.ToArray();
             outputs = outputList.ToArray();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            int errors = 0;
+            foreach (var item in TestImagesToView)
+            {
+                int actual = ksvm.Decide(item.Vector);
+                item.Category = Categories.FirstOrDefault(x => x.Value == actual).Key;
+                if(item.Category != item.ExptectedCategory)
+                {
+                    errors++;
+
+                }
+            }
+            double percentOfErrors =(double)((TestImagesToView.Count - errors) / TestImagesToView.Count);
+            OutpusConsole.Text = "Efficiency: " + percentOfErrors + ".";
+
         }
     }
 }
