@@ -14,6 +14,8 @@ using Accord.Math;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
 using Accord.Statistics.Kernels;
+using Accord.Math.Distances;
+using Accord;
 
 namespace Image_Recognition
 {
@@ -25,7 +27,7 @@ namespace Image_Recognition
     public partial class MainWindow : Window
     {
         MulticlassSupportVectorMachine<IKernel> ksvm;
-        Dictionary<string, Bitmap> originalTraingImages;
+        Dictionary<string, Bitmap> originalTrainingImages;
         Dictionary<string, Bitmap> originalTestImages;
 
 
@@ -45,17 +47,36 @@ namespace Image_Recognition
 
         private void StartWordMatching_Click(object sender, RoutedEventArgs e)
         {
-            OutpusConsole.Text = "Procesing...";
-            //TODO Application.DoEvents();
-            BinarySplit binarySplit = new BinarySplit(Int32.Parse(WordsNumber.Text));
-            BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
-            var test22 = originalTraingImages.Values.ToArray();
-            bow = surfBow.Learn(test22);
+
+
+
+
+            if ((bool)SurfRadio.IsChecked)
+            {
+                BinarySplit binarySplit = new BinarySplit(Int32.Parse(WordsNumber.Text));
+                BagOfVisualWords surfBow = new BagOfVisualWords(binarySplit);
+                bow = surfBow.Learn(originalTrainingImages.Values.ToArray());
+            }
+            else if (((bool)FreagRadio.IsChecked))
+            {
+                var kmodes = new KModes<byte>(Int32.Parse(WordsNumber.Text), new Hamming());
+                var freak = new FastRetinaKeypointDetector();
+                var freakBow = new BagOfVisualWords<FastRetinaKeypoint, byte[]>(freak, kmodes);
+                bow = freakBow.Learn(originalTrainingImages.Values.ToArray());
+            }
+            else
+            {
+                BinarySplit binarySplit = new BinarySplit(Int32.Parse(WordsNumber.Text));
+                var hog = new HistogramsOfOrientedGradients();
+                var hogBow = BagOfVisualWords.Create(hog, binarySplit);
+                bow = hogBow.Learn(originalTrainingImages.Values.ToArray());
+
+            }
 
             foreach (var item in TrainingImagesToView)
             {
                 // Get item image
-                Bitmap image = originalTraingImages[item.ImageKey] as Bitmap;
+                Bitmap image = originalTrainingImages[item.ImageKey] as Bitmap;
 
                 // Get a feature vector representing this image
                 item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
@@ -79,9 +100,11 @@ namespace Image_Recognition
             OutpusConsole.Text = "Done! \nNow select method of learning and press Start Traning button.";
             TestItemsList.Items.Refresh();
             TraningItemsList.Items.Refresh();
+            StartTrainingButton.IsEnabled = true;
+            EstimateGaussianButton.IsEnabled = true;
+            EtimateComplexityButton.IsEnabled = true;
         }
 
-        //TODO zrobić to przez event onloaded
         private void OnLoad()
         {
             var path = new DirectoryInfo(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Resources"));
@@ -93,7 +116,7 @@ namespace Image_Recognition
             TestImagesToView = new ObservableCollection<SampleImage>();
 
             originalTestImages = new Dictionary<string, Bitmap>();
-            originalTraingImages = new Dictionary<string, Bitmap>();
+            originalTrainingImages = new Dictionary<string, Bitmap>();
 
             //tu ma być wyświetlane
             //ImageList imageList = new ImageList();
@@ -139,7 +162,7 @@ namespace Image_Recognition
                     {
                         // Put the first 70% in training set
                         //item = new ListViewItem(trainingGroup);
-                        originalTraingImages.Add(imageKey, image);
+                        originalTrainingImages.Add(imageKey, image);
 
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
                         obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
@@ -197,7 +220,7 @@ namespace Image_Recognition
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             OnLoad();
-            OutpusConsole.Text = "Select number of words and press Start Word Matching button";
+            OutpusConsole.Text = "Select number of words and press Start Word Matching button. \nThis may take a (very) significant amount of time...";
 
 
             TraningItemsList.ItemsSource = TrainingImagesToView;
@@ -216,7 +239,8 @@ namespace Image_Recognition
             double complexity = 1;
             double tolerance = 0.01;
             int cacheSize = 500;
-            SelectionStrategy strategy = SelectionStrategy.Sequential;
+            Enum.TryParse(StrategyComboBox.SelectedItem.ToString(), out SelectionStrategy strategy);
+
 
             // Create the support vector machine learning algorithm
             var teacher = new MulticlassSupportVectorLearning<IKernel>()
@@ -281,6 +305,10 @@ namespace Image_Recognition
             //int bytes = ksvm.SupportVectorUniqueCount * ksvm.NumberOfInputs * sizeof(double);
             //double megabytes = bytes / (1024.0 * 1024.0);
             //lbSize.Text = String.Format("{0} ({1} MB)", ksvm.SupportVectorUniqueCount, megabytes);
+            StartClassifyingButton.IsEnabled = true;
+            OutpusConsole.Text = "Training is finished. Now you can press Start Classifying Button.";
+
+
         }
         private void GetData(out double[][] inputs, out int[] outputs)
         {
@@ -306,7 +334,7 @@ namespace Image_Recognition
             outputs = outputList.ToArray();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void StartClassifyingButton_Click(object sender, RoutedEventArgs e)
         {
             int errors = 0;
             foreach (var item in TestImagesToView)
@@ -321,7 +349,56 @@ namespace Image_Recognition
             }
             int percentOfErrors = ((TestImagesToView.Count - errors) * 100 / TestImagesToView.Count);
             OutpusConsole.Text = "Efficiency: " + percentOfErrors + "%.";
+            TestItemsList.Items.Refresh();
 
+        }
+
+        private IKernel getKernel()
+        {
+            if ((bool)GaussianRadio.IsChecked)
+            {
+                return new Gaussian(Double.Parse(GoussianSigma.Text));
+            }
+            else if ((bool)PolynomialRadio.IsChecked)
+            {
+                if (Int32.Parse(DegreeTextBox.Text) == 1)
+                    return new Linear(Double.Parse(ContantTextBox.Text));
+                else
+                    return new Polynomial(Int32.Parse(DegreeTextBox.Text), Double.Parse(ContantTextBox.Text));
+            }
+            else if ((bool)ChiRadio.IsChecked)
+            {
+                return new ChiSquare();
+            }
+            else if ((bool)HistogramRadio.IsChecked)
+            {
+                return new HistogramIntersection(1, 1);
+            }
+
+            throw new Exception();
+        }
+
+        private void EstimateGaussianButton_Click(object sender, RoutedEventArgs e)
+        {
+            double[][] inputs;
+            int[] outputs;
+            GetData(out inputs, out outputs);
+
+            DoubleRange range;
+            Gaussian g = Gaussian.Estimate(inputs, inputs.Length, out range);
+
+            GoussianSigma.Text = g.Sigma.ToString("0.##");
+        }
+
+        private void EtimateComplexityButton_Click(object sender, RoutedEventArgs e)
+        {
+            double[][] inputs;
+            int[] outputs;
+            GetData(out inputs, out outputs);
+
+            IKernel kernel = getKernel();
+
+            ComplexityTextBox.Text = kernel.EstimateComplexity(inputs).ToString("0.#");
         }
     }
 }
