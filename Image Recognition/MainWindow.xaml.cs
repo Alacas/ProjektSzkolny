@@ -19,25 +19,15 @@ using Accord;
 
 namespace Image_Recognition
 {
-
-    //TODO zmienic nazwę okna
-    //TODO sprawdzić czy da się łatwo zrobić zakładki
-    //TODO wyswietlanie w jednym oknie danych treningowych wraz ze slowami, a w drugim oknie testowych z rpzypisanymi klasami
-
+    
     public partial class MainWindow : Window
     {
         MulticlassSupportVectorMachine<IKernel> ksvm;
         Dictionary<string, Bitmap> originalTrainingImages;
         Dictionary<string, Bitmap> originalTestImages;
 
-
         public List<SampleImage> TrainingImagesToView { get; set; }
         public ObservableCollection<SampleImage> TestImagesToView { get; set; }
-
-
-        //TODO wywalic
-        Dictionary<string, Bitmap> originalImages;
-        Dictionary<string, Bitmap> displayImages;
         Dictionary<string, int> Categories = new Dictionary<string, int>();
         public MainWindow()
         {
@@ -47,10 +37,6 @@ namespace Image_Recognition
 
         private void StartWordMatching_Click(object sender, RoutedEventArgs e)
         {
-
-
-
-
             if ((bool)SurfRadio.IsChecked)
             {
                 BinarySplit binarySplit = new BinarySplit(Int32.Parse(WordsNumber.Text));
@@ -74,28 +60,14 @@ namespace Image_Recognition
             }
 
             foreach (var item in TrainingImagesToView)
-            {
-                // Get item image
+            {               
                 Bitmap image = originalTrainingImages[item.ImageKey] as Bitmap;
-
-                // Get a feature vector representing this image
                 item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
-
-
-
-
             }
             foreach (var item in TestImagesToView)
             {
-                // Get item image
                 Bitmap image = originalTestImages[item.ImageKey] as Bitmap;
-
-                // Get a feature vector representing this image
                 item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
-
-
-
-
             }
             OutpusConsole.Text = "Done! \nNow select method of learning and press Start Traning button.";
             TestItemsList.Items.Refresh();
@@ -108,78 +80,35 @@ namespace Image_Recognition
         private void OnLoad()
         {
             var path = new DirectoryInfo(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Resources"));
-
-            // Create image list to load images into
-            originalImages = new Dictionary<string, Bitmap>();
-            displayImages = new Dictionary<string, Bitmap>();
             TrainingImagesToView = new List<SampleImage>();
             TestImagesToView = new ObservableCollection<SampleImage>();
-
             originalTestImages = new Dictionary<string, Bitmap>();
             originalTrainingImages = new Dictionary<string, Bitmap>();
-
-            //tu ma być wyświetlane
-            //ImageList imageList = new ImageList();
-            //imageList.ImageSize = new Size(64, 64);
-            //imageList.ColorDepth = ColorDepth.Depth32Bit;
-            //listView1.LargeImageList = imageList;
-
             int currentClassLabel = 0;
-
-            //TODO złapać wyjątek gdy nie ma potrzebnego foledru, albo jest pusty
             foreach (DirectoryInfo classFolder in path.EnumerateDirectories())
             {
                 string name = classFolder.Name;
                 Categories.Add(name, currentClassLabel);
-
-                // Create two list view groups for each class.  Use 70%
-                // of training instances and the remaining 30% as testing.
-                //ListViewGroup trainingGroup = listView1.Groups.Add(name + ".train", name + ".train");
-                //ListViewGroup testingGroup = listView1.Groups.Add(name + ".test", name + ".test");
-
-                // Load the images from the directory that contains images for each class
-                FileInfo[] files = GetFilesByExtensions(classFolder, ".jpg", ".png").ToArray();
-
-                // Shuffle the samples
+                FileInfo[] files = GetFilesByExtensions(classFolder, ".jpg", ".png").ToArray();               
                 Accord.Math.Vector.Shuffle(files);
-
-                // For each file in the class folder
                 for (int i = 0; i < files.Length; i++)
                 {
                     FileInfo file = files[i];
-
                     Bitmap image = (Bitmap)Bitmap.FromFile(file.FullName);
-
-
                     string imageKey = file.FullName;
-
-                    //imageList.Images.Add(imageKey, image);
-                    originalImages.Add(imageKey, image); //po co to??
-                    displayImages.Add(imageKey, image);
-                    //TODO robiz testowe i treningowe dane
-                    //ListViewItem item;
                     if ((i / (double)files.Length) < 0.7)
-                    {
-                        // Put the first 70% in training set
-                        //item = new ListViewItem(trainingGroup);
+                    {        
                         originalTrainingImages.Add(imageKey, image);
-
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
                         obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
                               image.GetHbitmap(),
                               IntPtr.Zero,
                               System.Windows.Int32Rect.Empty,
-                              BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
-                        //TrainingItemsList.Items.Add(obrazek);
+                              BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));                  
                         TrainingImagesToView.Add(new SampleImage(obrazek, name, imageKey));
-
-
                     }
                     else
                     {
-                        // Put the restant 30% in test set
-                        //item = new ListViewItem(testingGroup);
-                        //TODO jesli to mozliwe wywalic imagekey
                         originalTestImages.Add(imageKey, image);
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
                         obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
@@ -187,27 +116,12 @@ namespace Image_Recognition
                               IntPtr.Zero,
                               System.Windows.Int32Rect.Empty,
                               BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
-                        //TrainingItemsList.Items.Add(obrazek);
                         TestImagesToView.Add(new SampleImage(obrazek, "", imageKey, name));
                     }
-
-                    //item.ImageKey = imageKey;
-                    //item.Name = shortName;
-                    //item.Text = shortName;
-                    // Use the tag object to store the class label of each image 
-                    // - we will recover it from here later
-                    //item.Tag = new Tuple<double[], int>(null, currentClassLabel);
-
-                    //listView1.Items.Add(item);
                 }
 
                 currentClassLabel++;
             }
-
-
-
-
-
         }
         public static IEnumerable<FileInfo> GetFilesByExtensions(DirectoryInfo dir, params string[] extensions)
         {
@@ -231,18 +145,11 @@ namespace Image_Recognition
 
         private void StartTraning_Click(object sender, RoutedEventArgs e)
         {
-            // Get the chosen kernel 
-            IKernel kernel = new ChiSquare(); //new Gaussian(6.2);
-
-            // Extract training parameters from the interface
-            //TODO pobrac to z UI
+            IKernel kernel = new ChiSquare();
             double complexity = 1;
             double tolerance = 0.01;
             int cacheSize = 500;
             Enum.TryParse(StrategyComboBox.SelectedItem.ToString(), out SelectionStrategy strategy);
-
-
-            // Create the support vector machine learning algorithm
             var teacher = new MulticlassSupportVectorLearning<IKernel>()
             {
                 Kernel = kernel,
@@ -258,78 +165,24 @@ namespace Image_Recognition
                     };
                 }
             };
-
-            // Get the input and output data
             double[][] inputs;
             int[] outputs;
             GetData(out inputs, out outputs);
-
-            // Prepare to start learning
-            //lbStatus.Text = "Training the classifiers. This may take a (very) significant amount of time...";
-            //Application.DoEvents();
-
-
-
-            // Train the machines. It should take a while.
             this.ksvm = teacher.Learn(inputs, outputs);
-
-            //sw.Stop();
-
-            // Compute the training error (accuracy, also known as zero-one-loss)
-            //double error = new ZeroOneLoss(outputs).Loss(ksvm.Decide(inputs));
-
-            //lbStatus.Text = String.Format(
-            //    "Training complete ({0}ms, {1}er). Click Classify to test the classifiers.",
-            //    sw.ElapsedMilliseconds, error);
-
-            //btnClassifyElimination.Enabled = true;
-
-            //// Populate the information tab with the machines
-            //dgvMachines.Rows.Clear();
-            //for (int i = 0, k = 1; i < ksvm.NumberOfOutputs; i++)
-            //{
-            //    for (int j = 0; j < i; j++, k++)
-            //    {
-            //        SupportVectorMachine<IKernel> machine = ksvm[i, j];
-
-            //        int numberOfSupportVectors = machine.SupportVectors == null ?
-            //            0 : machine.SupportVectors.Length;
-
-            //        int rowIndex = dgvMachines.Rows.Add(k, i + "-vs-" + j, numberOfSupportVectors, machine.Threshold);
-            //        dgvMachines.Rows[rowIndex].Tag = machine;
-            //    }
-            //}
-
-            //// approximate size in bytes = 
-            ////   number of support vectors * number of doubles in a support vector * size of double
-            //int bytes = ksvm.SupportVectorUniqueCount * ksvm.NumberOfInputs * sizeof(double);
-            //double megabytes = bytes / (1024.0 * 1024.0);
-            //lbSize.Text = String.Format("{0} ({1} MB)", ksvm.SupportVectorUniqueCount, megabytes);
             StartClassifyingButton.IsEnabled = true;
             OutpusConsole.Text = "Training is finished. Now you can press Start Classifying Button.";
-
-
         }
         private void GetData(out double[][] inputs, out int[] outputs)
         {
             List<double[]> inputList = new List<double[]>();
             List<int> outputList = new List<int>();
-
-
-            //przechowywać vector jako string i jako double[], przechowywac jakos tablice typow
-
             foreach (var item in TrainingImagesToView)
             {
-                // Recover the class label and the feature vector
-                // that had been stored in the rows' Tag objects
-                //var info = item.Words as Tuple<double[], int>;
                 inputList.Add(item.Vector);
                 int categoryName;
                 Categories.TryGetValue(item.Category, out categoryName);
                 outputList.Add(categoryName);
             }
-
-
             inputs = inputList.ToArray();
             outputs = outputList.ToArray();
         }
@@ -395,9 +248,7 @@ namespace Image_Recognition
             double[][] inputs;
             int[] outputs;
             GetData(out inputs, out outputs);
-
             IKernel kernel = getKernel();
-
             ComplexityTextBox.Text = kernel.EstimateComplexity(inputs).ToString("0.#");
         }
     }
