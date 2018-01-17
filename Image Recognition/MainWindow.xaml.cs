@@ -19,7 +19,7 @@ using Accord;
 
 namespace Image_Recognition
 {
-    
+
     public partial class MainWindow : Window
     {
         MulticlassSupportVectorMachine<IKernel> ksvm;
@@ -60,7 +60,7 @@ namespace Image_Recognition
             }
 
             foreach (var item in TrainingImagesToView)
-            {               
+            {
                 Bitmap image = originalTrainingImages[item.ImageKey] as Bitmap;
                 item.Vector = (bow as ITransform<Bitmap, double[]>).Transform(image);
             }
@@ -77,9 +77,11 @@ namespace Image_Recognition
             EtimateComplexityButton.IsEnabled = true;
         }
 
+
         private void OnLoad()
         {
             var path = new DirectoryInfo(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Resources"));
+            var testPath = new DirectoryInfo(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Test"));
             TrainingImagesToView = new List<SampleImage>();
             TestImagesToView = new ObservableCollection<SampleImage>();
             originalTestImages = new Dictionary<string, Bitmap>();
@@ -89,25 +91,25 @@ namespace Image_Recognition
             {
                 string name = classFolder.Name;
                 Categories.Add(name, currentClassLabel);
-                FileInfo[] files = GetFilesByExtensions(classFolder, ".jpg", ".png").ToArray();               
+                FileInfo[] files = GetFilesByExtensions(classFolder, ".jpg", ".png").ToArray();
                 Accord.Math.Vector.Shuffle(files);
                 for (int i = 0; i < files.Length; i++)
                 {
                     FileInfo file = files[i];
                     Bitmap image = (Bitmap)Bitmap.FromFile(file.FullName);
                     string imageKey = file.FullName;
-                    if ((i / (double)files.Length) < 0.7)
-                    {        
-                        originalTrainingImages.Add(imageKey, image);
-                        System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
-                        obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-                              image.GetHbitmap(),
-                              IntPtr.Zero,
-                              System.Windows.Int32Rect.Empty,
-                              BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));                  
-                        TrainingImagesToView.Add(new SampleImage(obrazek, name, imageKey));
-                    }
-                    else
+                    //if ((i / (double)files.Length) < 0.7)
+                    //{        
+                    originalTrainingImages.Add(imageKey, image);
+                    System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
+                    obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                          image.GetHbitmap(),
+                          IntPtr.Zero,
+                          System.Windows.Int32Rect.Empty,
+                          BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
+                    TrainingImagesToView.Add(new SampleImage(obrazek, name, imageKey));
+                    // }
+                    /*else
                     {
                         originalTestImages.Add(imageKey, image);
                         System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
@@ -117,10 +119,25 @@ namespace Image_Recognition
                               System.Windows.Int32Rect.Empty,
                               BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
                         TestImagesToView.Add(new SampleImage(obrazek, "", imageKey, name));
-                    }
+                    }*/
                 }
 
                 currentClassLabel++;
+            }
+            FileInfo[] testFiles = GetFilesByExtensions(testPath, ".jpg", ".png").ToArray();
+            for (int i = 0; i < testFiles.Length; i++)
+            {
+                FileInfo file = testFiles[i];
+                Bitmap image = (Bitmap)Bitmap.FromFile(file.FullName);
+                string imageKey = file.FullName;
+                originalTestImages.Add(imageKey, image);
+                System.Windows.Controls.Image obrazek = new System.Windows.Controls.Image();
+                obrazek.Source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                      image.GetHbitmap(),
+                      IntPtr.Zero,
+                      System.Windows.Int32Rect.Empty,
+                      BitmapSizeOptions.FromWidthAndHeight(image.Width, image.Height));
+                TestImagesToView.Add(new SampleImage(obrazek, "", imageKey, path.Name));
             }
         }
         public static IEnumerable<FileInfo> GetFilesByExtensions(DirectoryInfo dir, params string[] extensions)
@@ -200,8 +217,8 @@ namespace Image_Recognition
 
                 }
             }
-            int percentOfErrors = ((TestImagesToView.Count - errors) * 100 / TestImagesToView.Count);
-            OutpusConsole.Text = "Efficiency: " + percentOfErrors + "%.";
+            // int percentOfErrors = ((TestImagesToView.Count - errors) * 100 / TestImagesToView.Count);
+            //OutpusConsole.Text = "Efficiency: " + percentOfErrors + "%.";
             TestItemsList.Items.Refresh();
 
         }
